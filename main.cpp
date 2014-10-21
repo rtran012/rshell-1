@@ -11,9 +11,11 @@
 
 using namespace std;
 
-void parser(string inp, char ** args)
+void initializer(char ** ptr);
+
+void parser(string inp, char ** args, int& count)
 {
-   unsigned count=0; 
+   count=0; 
 	unsigned i=0;
 	while(i<inp.size())
 	{
@@ -86,7 +88,7 @@ void parser(string inp, char ** args)
 
 void breaker(char ** args, char ** curargs, int& index, int& stopstat)
 {
-	memset(curargs,0,30);
+	initializer(curargs);
 	int curargnum=0;
 	while(1)
 	{
@@ -97,7 +99,7 @@ void breaker(char ** args, char ** curargs, int& index, int& stopstat)
 			break;
 		}
 			//status if 0 when the argument list reaches normal conclusion.
-		else if(args[index]==";")
+		if(strcmp(args[index],";")==0)
 		{
 			stopstat=1;
 			//status will be set to 1 if ; connector is detected.
@@ -105,7 +107,7 @@ void breaker(char ** args, char ** curargs, int& index, int& stopstat)
 			break;
 			//end the loop in next iteration.
 		}
-		else if(args[index]=="&&")
+		else if(strcmp(args[index],"&&")==0)
 		{
 			stopstat=2;
 			//status will be set to 2 if && connector is detected.
@@ -113,7 +115,7 @@ void breaker(char ** args, char ** curargs, int& index, int& stopstat)
 			break;
 			//end the loop on next iteration.
 		}
-		else if(args[index]=="||")
+		else if(strcmp(args[index],"||")==0)
 		{
 			stopstat=3;
 			//status will be set to 3 if || is detected.
@@ -141,75 +143,27 @@ void shell()
 		if(0==pid)
 		{
 			char * args[30];
-			memset(args,0,30);
-			parser(input, args);
-			bool x=true;
-			int argnum=0;
-			while(x)
+			initializer(args);
+			int targs=0;
+			parser(input, args, targs);
+			int stopstat=-1;
+			int index=0;
+			while(stopstat!=0)
 			{
-				x=false;
-				char* curargs[30];
-				memset(args,0,30);
-				int curargnum=0;
-				bool y=true;
-				int status=0;
-				while(y)
-				{
-					if(args[argnum]==0)
-					{
-						status=4;
-						//status will be set to 4 if the command is fully intrprted.
-						break;
-					}
-					//status if 0 when the argument list reaches normal conclusion.
-					else if(args[argnum]=="&&")
-					{
-						status=1;
-						//status will be set to 1 if && connector is detected.
-						y=false;
-						//end the loop in next iteration.
-					}
-					else if(args[argnum]=="||")
-					{
-						status=2;
-						//status will be set to 2 if || connector is detected.
-						y=false;
-						//end the loop on next iteration.
-					}
-					else if(args[argnum]==";")
-					{
-						status=3;
-						//status will be set to 3 if ; is detected.
-						y=false;
-					}
-					else
-					{
-						strcpy(curargs[curargnum],args[argnum]);
-						curargnum++;
-					}
-					argnum++;
-				}
+				char * curargs[30];
+				breaker(args,curargs,index,stopstat);
 				int pid2=fork();
 				if(0==pid2)
 				{
-					for(int i=0;i<curargnum;i++)
-					{
-						cout << curargs[i] << endl;
-					}
-					int exec=execvp(curargs[0],curargs);
-					if(exec==-1) cout << "Error: Execution failed" << endl;
+					execvp(curargs[0], curargs);
+					exit(1);
 				}
 				else if(pid2>0)
 				{
-					int ex=wait(NULL);
+					wait(NULL);
 				}
-				else
-				{
-					cout << "Error: Forking failed" << endl;
-				}
-				if(status==4) x=false;
-				
 			}
+			exit(1);
 		}
 		else if(pid>0)
 		{
@@ -222,34 +176,38 @@ void shell()
 	}
 }
 
+void initializer(char ** ptr)
+{
+	for(int i=0;i<30;i++)
+	{
+		ptr[i]=0;
+	}
+}
+
 int main()
 {
-	string input;
+	shell();
+	/*string input;
 	char* args[30];
-	memset(args,0,30);
+	initializer(args);
+	int targs=0;
 	cout << "Input: " << flush;
 	getline(cin, input);
-	parser(input, args);
+	parser(input, args, targs);
 	int stopstat=-1;
 	int index=0;
 	while(stopstat!=0)
 	{
 		char * curargs[30];
 		breaker(args,curargs,index,stopstat);
-		cout << "Exited braker" << endl;
 		for(int j=0; curargs[j]!=0;j++)
 		{
 			cout << curargs[j] << " " << flush;
 		}
 		cout << endl;
 	}
-	cout << "Done Breaking" << endl;
-	/*for(int i=0;args[i]!=0;i++)
-	{
-		cout << args[i] << endl;
-	}
-	int x=execvp(args[0],args);
-	cout << x << endl;
-	*/
+	//int x=execvp(args[0],args);
+	//cout << x << endl;*/
+	
 	return 0;
 }

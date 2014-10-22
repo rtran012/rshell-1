@@ -8,6 +8,7 @@
 #include <errno.h>
 #include <cstdio>
 #include <string>
+#include <fstream>
 
 using namespace std;
 
@@ -133,7 +134,11 @@ int breaker(char ** args, char ** curargs, int& index)
 		}
 		else if(strcmp(args[index],"exit")==0)
 		{
-		   return 10;
+		  ofstream offf;
+		  offf.open("status.txt");
+		  offf << 0 << endl;
+		  offf.close();
+		  exit(0);
 		}
 		else
 		{
@@ -146,10 +151,14 @@ int breaker(char ** args, char ** curargs, int& index)
 }
 
 void shell()
-{
-   string input;
+{   
+	string input;
 	while(1)
 	{
+		ofstream off;
+		off.open("status.txt");
+		off << 1 << endl;
+		off.close();
 		int* mainstat=new int;
 		*mainstat=-1;
 		int pid=fork();
@@ -201,6 +210,11 @@ void shell()
 		else if(pid>0)
 		{
 			wait(NULL);
+			ifstream infs;
+			infs.open("status.txt");
+			int x;
+			infs >> x;
+			if(x==0) exit(0);
 			continue;
 		}
 		else

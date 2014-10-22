@@ -195,7 +195,7 @@ void shell()
 					perror("Execvp");
 					ofstream suboff;
 					suboff.open("substat.txt");
-					subof << 0 << endl;
+					suboff << 0 << endl;
 					subof.close();
 					exit(1);
 				}

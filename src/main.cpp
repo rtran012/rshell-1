@@ -164,6 +164,10 @@ void shell()
 		int pid=fork();
 		if(0==pid)
 		{
+			ofstream subof;
+			subof.open("substat.txt");
+			subof << 1 << endl;
+			off.close();
 			char *hostname=new char[100];
 			if(gethostname(hostname,50)==-1) perror("Host Name:");
 			cout << getlogin()  <<  "@" << hostname << ": " << flush;
@@ -175,6 +179,10 @@ void shell()
 			int index=0;
 			while(1)
 			{
+				ofstream subof;
+				subof.open("substat.txt");
+				subof << 1 << endl;
+				off.close();
 				char * curargs[30];
 				int exst=breaker(args,curargs,index);
 				if(exst==10) exit(-1);
@@ -185,19 +193,27 @@ void shell()
 				{
 					if(execvp(curargs[0], curargs)==-1)
 					perror("Execvp");
+					ofstream suboff;
+					suboff.open("substat.txt");
+					subof << 0 << endl;
+					subof.close();
 					exit(1);
 				}
 				else if(pid2>0)
 				{
 					if(wait(status)==-1) perror("Wait failed");
 					if(exst==0) break;
-					if(WIFEXITED(*status))
+					ifstream subif;
+					subif.open("substat.txt");
+					int y;
+					subif >> y;
+					if(y==0)
 					{
-						if(exst==3) break;
+						if(exst==2) break;
 					}
 					else
 					{
-						if(exst==2) break;
+						if(exst==3) break;
 					}
 				}
 				else

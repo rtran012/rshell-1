@@ -1,0 +1,82 @@
+Script started on Tue 21 Oct 2014 11:35:13 PM PDT
+]0;hundal@hundal-VPCYB35AH: ~/Code/assignments/rshellhundal@hundal-VPCYB35AH:~/Code/assignments/rshell$ ls
+exec.script  LICENSE  Makefile  README.md  [0m[01;32mrshell[0m  [01;34msrc[0m  [01;34mtests[0m
+]0;hundal@hundal-VPCYB35AH: ~/Code/assignments/rshellhundal@hundal-VPCYB35AH:~/Code/assignments/rshell$ make
+g++ src/main.cpp -Werror -Wall -ansi -pedantic -o rshell
+mkdir bin
+mv rshell bin/
+touch bin/status.txt
+touch bin/substat.txt
+]0;hundal@hundal-VPCYB35AH: ~/Code/assignments/rshellhundal@hundal-VPCYB35AH:~/Code/assignments/rshell$ bin/rshell
+ls
+bin  exec.script  LICENSE  Makefile  README.md	src  status.txt  substat.txt  tests
+ls -a
+.  ..  bin  exec.script  .git  LICENSE	Makefile  README.md  src  status.txt  substat.txt  tests
+ls -a -l
+total 44
+drwxrwxr-x 6 hundal hundal 4096 Oct 21 23:35 .
+drwxrwxr-x 3 hundal hundal 4096 Oct 19 18:41 ..
+drwxrwxr-x 2 hundal hundal 4096 Oct 21 23:35 bin
+-rw-rw-r-- 1 hundal hundal    0 Oct 21 23:35 exec.script
+drwxrwxr-x 8 hundal hundal 4096 Oct 21 23:33 .git
+-rw-rw-r-- 1 hundal hundal   12 Oct 21 22:00 LICENSE
+-rw-rw-r-- 1 hundal hundal  156 Oct 21 23:32 Makefile
+-rw-rw-r-- 1 hundal hundal  682 Oct 21 22:59 README.md
+drwxrwxr-x 2 hundal hundal 4096 Oct 21 23:30 src
+-rw-rw-r-- 1 hundal hundal    2 Oct 21 23:35 status.txt
+-rw-rw-r-- 1 hundal hundal    2 Oct 21 23:35 substat.txt
+drwxrwxr-x 2 hundal hundal 4096 Oct 21 23:16 tests
+ls && pwd
+bin  exec.script  LICENSE  Makefile  README.md	src  status.txt  substat.txt  tests
+/home/hundal/Code/assignments/rshell
+ls&&pwd
+bin  exec.script  LICENSE  Makefile  README.md	src  status.txt  substat.txt  tests
+/home/hundal/Code/assignments/rshell
+ls || pwd
+bin  exec.script  LICENSE  Makefile  README.md	src  status.txt  substat.txt  tests
+ls||pwd
+bin  exec.script  LICENSE  Makefile  README.md	src  status.txt  substat.txt  tests
+ls                 &&                       pwd
+bin  exec.script  LICENSE  Makefile  README.md	src  status.txt  substat.txt  tests
+/home/hundal/Code/assignments/rshell
+la -a && pwd
+Execvp: No such file or directory
+ls -a && pwd
+.  ..  bin  exec.script  .git  LICENSE	Makefile  README.md  src  status.txt  substat.txt  tests
+/home/hundal/Code/assignments/rshell
+pwd ||      l pws d && ls -a -l
+/home/hundal/Code/assignments/rshell
+total 44
+drwxrwxr-x 6 hundal hundal 4096 Oct 21 23:35 .
+drwxrwxr-x 3 hundal hundal 4096 Oct 19 18:41 ..
+drwxrwxr-x 2 hundal hundal 4096 Oct 21 23:35 bin
+-rw-rw-r-- 1 hundal hundal    0 Oct 21 23:35 exec.script
+drwxrwxr-x 8 hundal hundal 4096 Oct 21 23:33 .git
+-rw-rw-r-- 1 hundal hundal   12 Oct 21 22:00 LICENSE
+-rw-rw-r-- 1 hundal hundal  156 Oct 21 23:32 Makefile
+-rw-rw-r-- 1 hundal hundal  682 Oct 21 22:59 README.md
+drwxrwxr-x 2 hundal hundal 4096 Oct 21 23:30 src
+-rw-rw-r-- 1 hundal hundal    2 Oct 21 23:36 status.txt
+-rw-rw-r-- 1 hundal hundal    2 Oct 21 23:36 substat.txt
+drwxrwxr-x 2 hundal hundal 4096 Oct 21 23:16 tests
+ls # -a 0l
+bin  exec.script  LICENSE  Makefile  README.md	src  status.txt  substat.txt  tests
+ls -a # this is a comment
+.  ..  bin  exec.script  .git  LICENSE	Makefile  README.md  src  status.txt  substat.txt  tests
+bin/rshell
+#opened rshell in rshell
+exit # this will close the inner rshell
+]0;hundal@hundal-VPCYB35AH: ~/Code/assignments/rshellhundal@hundal-VPCYB35AH:~/Code/assignments/rshell$ ls
+[0m[01;34mbin[0m  exec.script  LICENSE  Makefile  README.md  [01;34msrc[0m  status.txt  substat.txt  [01;34mtests[0m
+]0;hundal@hundal-VPCYB35AH: ~/Code/assignments/rshellhundal@hundal-VPCYB35AH:~/Code/assignments/rshell$ bin/rshell
+ls;pwd;echo hello
+bin  exec.script  LICENSE  Makefile  README.md	src  status.txt  substat.txt  tests
+/home/hundal/Code/assignments/rshell
+hello
+cat LICENSE
+GPL LICENSE
+exit # dem   goodbye
+]0;hundal@hundal-VPCYB35AH: ~/Code/assignments/rshellhundal@hundal-VPCYB35AH:~/Code/assignments/rshell$ exit
+exit
+
+Script done on Tue 21 Oct 2014 11:38:44 PM PDT

@@ -109,8 +109,8 @@ int breaker(char ** args, char ** curargs, int& index)
 		{
 			return 0;
 			//status will be set to 0 if the command is fully intrprretted.
-		}
 			//status if 0 when the argument list reaches normal conclusion.
+		}
 		if(strcmp(args[index],";")==0)
 		{
 			index++;
@@ -131,6 +131,11 @@ int breaker(char ** args, char ** curargs, int& index)
 			return 3;
 			//status will be set to 3 if || is detected.
 		}
+		else if(strcmp(args[index],"exit")==0)
+		{
+			cout << "Tester" << endl;
+		   return 10;
+		}
 		else
 		{
 			curargs[curargnum]=new char[strlen(args[index])+1];
@@ -146,10 +151,14 @@ void shell()
    string input;
 	while(1)
 	{
+		int* mainstat=new int;
+		*mainstat=-1;
 		int pid=fork();
 		if(0==pid)
 		{
-			cout << "rshell: " << flush;
+			char *hostname=new char[100];
+			if(gethostname(hostname,50)==-1) perror("Host Name:");
+			cout << getlogin()  <<  "@" << hostname << ": " << flush;
 			getline(cin, input);
 			char * args[30];
 			initializer(args);
@@ -160,20 +169,21 @@ void shell()
 			{
 				char * curargs[30];
 				int exst=breaker(args,curargs,index);
+				if(exst==10) return;
+				int *status=new int;
+				*status=-1;
 				int pid2=fork();
 				if(0==pid2)
 				{
 					if(execvp(curargs[0], curargs)==-1)
-					perror("Execution failed");
+					perror("Execvp");
 					exit(1);
 				}
 				else if(pid2>0)
 				{
-					int *status=new int;
-					*status=-1;
 					if(wait(status)==-1) perror("Wait failed");
 					if(exst==0) break;
-					if(*status==0)
+					if(WIFEXITED(*status))
 					{
 						if(exst==3) break;
 					}
@@ -182,17 +192,29 @@ void shell()
 						if(exst==2) break;
 					}
 				}
+				else
+				{
+					perror("fork:");
+				}
 			}
-			exit(0);
+		return;
 		}
 		else if(pid>0)
 		{
-			wait(NULL);
+			cout << "In main parent" << endl;
+			if(wait(mainstat)==-1) perror("wait:");
+		   cout << "status to par: " << *mainstat << endl;
+			if(WIFEXITED(*mainstat)) cout << "wifexited" << endl;
+			cout << "Exit status: " << WEXITSTATUS(*mainstat) << endl;
+			if(WIFSIGNALED(*mainstat))
+			{
+				cout << "WIFSIGNALED" << endl;
+			}
 			continue;
 		}
 		else
 		{
-			cout << "Error: could not fork process" << endl;
+			perror("fork:");
 		}
 	}
 }

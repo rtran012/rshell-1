@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -46,7 +47,7 @@ void method2(char ** argv)
   t.start();
   int fi=open(argv[1],O_RDONLY);
   if(fi==-1) perror("Open");
-  int fo=open(argv[2],O_RDWR | O_CREAT);
+  int fo=open(argv[2],O_RDWR | O_CREAT,0666);
   if(fo==-1) perror("Open");
   char * pswap=new char;
   int rsize,wsize;
@@ -84,7 +85,7 @@ void method3(char ** argv)
   t.start();
   int fi=open(argv[1],O_RDONLY);
   if(fi==-1) perror("Open");
-  int fo=open(argv[2],O_RDWR | O_CREAT);
+  int fo=open(argv[2],O_RDWR | O_CREAT,0666);
   if(fo==-1) perror("Open");
   char * pswap=new char[BUFSIZ];
   int rsize,wsize;
@@ -115,14 +116,57 @@ void method3(char ** argv)
   if(close(fo)==-1) perror("Close");
 }
 
-int main(int c, char ** args)
+bool lp(char ** argv, char ** args)
 {
+  bool doall=false;
+  int i=1;
+  for(int curr=0;curr<3;curr++)
+  {
+    if(argv[i][0]=='-')
+    {
+      if(argv[i][1]=='a')
+      {
+        doall=true;
+        cout << "i " << i << endl;
+        if(i==3) return true;
+        else i++;
+      }
+      else
+      {
+        cerr << "Invalid Flag. Try -a." << endl;
+        exit(1);
+      }
+    }
+    args[curr]=new char[strlen(argv[i])+1];
+    //args[curr]=new char[100];
+    strcpy(args[curr],argv[i]);
+    i++;
+  }
+  return doall;
+}
+
+int main(int c, char ** argv)
+{
+  if(c<3 or c>4)
+  {
+    cerr << "Incorrect number of args" << endl;
+    exit(1);
+  }
+  char ** args=new char*[3];
+  bool doall=lp(argv, args);
+  cout << "Exiteed" << endl;
+  cout << args << endl;
+  cout << args[0] << endl << args[1] << endl;
+  cout << "Doall " << doall << endl;
   /*if(c!=3)
   {
     cerr << "Invalid Syntax";
     exit(1);
   }*/
-  //method1(args);
-  method2(args);
-  //method3(args);
+  //struct stat* buff=new struct stat;
+  //int test=stat("wordsg",buff);
+  //cout << "Test: " << test << endl;
+ // method1(args);
+ // method2(args);
+ // method3(args);
 }

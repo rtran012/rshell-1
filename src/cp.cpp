@@ -1,3 +1,4 @@
+#include <cstring>
 #include <iostream>
 #include <string.h>
 #include <sys/types.h>
@@ -11,17 +12,17 @@
 #include "Timer.h"
 using namespace std;
 
-void method1(char **argv)
+void method1(char **args)
 {
   cout << "Method 1" << endl;
   Timer t;
   double etime;
   t.start();
   ifstream ifs;
-  ifs.open(argv[1]);
+  ifs.open(args[0]);
   if(!ifs.is_open()) perror("Open");
   ofstream ofs;
-  ofs.open(argv[2]);
+  ofs.open(args[1]);
   if(!ofs.is_open()) perror("Open");
   char swap;
   while(1)
@@ -39,15 +40,15 @@ void method1(char **argv)
   ifs.close();
   ofs.close();
 }
-void method2(char ** argv)
+void method2(char ** args)
 {
   cout << "Method 2" << endl;
   Timer t;
   double etime;
   t.start();
-  int fi=open(argv[1],O_RDONLY);
+  int fi=open(args[0],O_RDONLY);
   if(fi==-1) perror("Open");
-  int fo=open(argv[2],O_RDWR | O_CREAT,0666);
+  int fo=open(args[1],O_RDWR | O_CREAT,0666);
   if(fo==-1) perror("Open");
   char * pswap=new char;
   int rsize,wsize;
@@ -77,15 +78,15 @@ void method2(char ** argv)
   if(close(fi)==-1) perror("Close");
   if(close(fo)==-1) perror("Close");
 }
-void method3(char ** argv)
+void method3(char ** args)
 {
   cout << "Method 3" << endl;
   Timer t;
   double etime;
   t.start();
-  int fi=open(argv[1],O_RDONLY);
+  int fi=open(args[0],O_RDONLY);
   if(fi==-1) perror("Open");
-  int fo=open(argv[2],O_RDWR | O_CREAT,0666);
+  int fo=open(args[1],O_RDWR | O_CREAT,0666);
   if(fo==-1) perror("Open");
   char * pswap=new char[BUFSIZ];
   int rsize,wsize;
@@ -116,19 +117,18 @@ void method3(char ** argv)
   if(close(fo)==-1) perror("Close");
 }
 
-bool lp(char ** argv, char ** args)
+bool lp(char ** argv, char ** args, int c)
 {
   bool doall=false;
-  int i=1;
-  for(int curr=0;curr<3;curr++)
+  int curr=0;
+  for(int i=1;i<c;i++)
   {
     if(argv[i][0]=='-')
     {
       if(argv[i][1]=='a')
       {
         doall=true;
-        cout << "i " << i << endl;
-        if(i==3) return true;
+        if(i==(c-1)) return true;
         else i++;
       }
       else
@@ -138,9 +138,8 @@ bool lp(char ** argv, char ** args)
       }
     }
     args[curr]=new char[strlen(argv[i])+1];
-    //args[curr]=new char[100];
     strcpy(args[curr],argv[i]);
-    i++;
+    curr++;
   }
   return doall;
 }
@@ -153,20 +152,25 @@ int main(int c, char ** argv)
     exit(1);
   }
   char ** args=new char*[3];
-  bool doall=lp(argv, args);
-  cout << "Exiteed" << endl;
-  cout << args << endl;
-  cout << args[0] << endl << args[1] << endl;
-  cout << "Doall " << doall << endl;
-  /*if(c!=3)
+  for(int i=0;i<3;i++) args[i]=0;
+  bool doall=lp(argv, args, c);
+  if(args[1]==0)
   {
-    cerr << "Invalid Syntax";
+    cerr << "Dest File not specified" << endl;
     exit(1);
-  }*/
-  //struct stat* buff=new struct stat;
-  //int test=stat("wordsg",buff);
-  //cout << "Test: " << test << endl;
- // method1(args);
- // method2(args);
- // method3(args);
+  }
+  struct stat* buff=new struct stat;
+  int test=stat(args[1],buff);
+  if(test==0)
+  {
+    cerr << "Dest File already exists" << endl;
+    exit(1);
+  }
+  if(doall)
+  {
+    method1(args);
+    method2(args);
+  }
+  method3(args);
+  return 0;
 }

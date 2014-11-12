@@ -44,9 +44,14 @@ void order(vector<char*> &list)
 	}
 }
 
-void listmakerpro(vector<char*> &nl,char * direc)
+void listmakerpro(vector<char*> &nl,vector<char*> &pl,char * direc=0)
 {
-  DIR* currdir=opendir(direc);
+	if(direc==0)
+	{
+		direc=new char[2];
+		strcpy(direc,".");
+  }
+	DIR* currdir=opendir(direc);
   if(currdir==NULL) perror("Opendir");
   dirent * curdiren=readdir(currdir);
   if(curdiren ==0 && errno !=0) perror("read"); 
@@ -55,14 +60,31 @@ void listmakerpro(vector<char*> &nl,char * direc)
 		nl.push_back(0);	
 		nl.back()=new char[strlen(curdiren->d_name)+1];
 		strcpy(nl.back(),curdiren->d_name);
+		pl.push_back(0);	
+		if(direc!=0)
+		{
+			pl.back()=new char[strlen(nl.back())+strlen(direc)+2];
+			strcpy(pl.back(),direc);
+			if(pl.back()[strlen(pl.back())-1]!='/')
+				strcat(pl.back(),"/");
+			strcat(pl.back(),nl.back());
+		}
+		else
+		{
+			pl.back()=new char[strlen(nl.back())+1];
+			strcpy(pl.back(),nl.back());
+		}
+
+		strcpy(nl.back(),curdiren->d_name);
     curdiren=readdir(currdir);
     if(curdiren ==0 && errno !=0) perror("read"); 
   }
 	order(nl); 
+	order(pl);
 	if(closedir(currdir)==-1) perror("Closedir");
 }
 
-void nprint(char * path)
+void nprint(char* name, char* path)
 {
 	struct stat outbuf;
 	int x=lstat(path,&outbuf);
@@ -71,8 +93,8 @@ void nprint(char * path)
 	if((outbuf.st_mode)&S_IXUSR) cout << "\x1b[32;1m";
 	if((outbuf.st_mode)&S_IFDIR) cout << "\x1b[34m";
 	if(S_ISLNK(outbuf.st_mode))	cout << "\x1b[36;1m";
-	if(path[0]=='.') cout << "\x1b[40;1m";
-	cout << path;	
+	if(name[0]=='.') cout << "\x1b[40;1m";
+	cout << name;	
 	cout << "\x1b[0m";
 	cout << "  ";
 }
@@ -82,8 +104,8 @@ void ndprint(bool showhid,char * cdir)
 	struct winsize w;
 	int used=0;
 	if(ioctl(0,TIOCGWINSZ,&w)==-1) perror("ioctl");
-	vector<char*> nl;
-	listmakerpro(nl,cdir);
+	vector<char*> nl,pl;
+	listmakerpro(nl,pl,cdir);
   for(int i=0;i<nl.size();i++)
   {
 		if(nl.at(i)[0]=='.' && !showhid) continue;
@@ -92,12 +114,11 @@ void ndprint(bool showhid,char * cdir)
 			cout << endl;
 			used=0;
 		}
-		nprint(nl.at(i));
+		nprint(nl.at(i),pl.at(i));
 		used+=(strlen(nl.at(i))+2);
 	}
-	cout << endl;
 }
-void lprint(char * path)
+void lprint(char* name, char* path)
 {
 	struct stat outbuf;
   int x=lstat(path,&outbuf);
@@ -153,23 +174,23 @@ void lprint(char * path)
 	if((outbuf.st_mode)&S_IXUSR) cout << "\x1b[32;1m";
   if((outbuf.st_mode)&S_IFDIR) cout << "\x1b[34m";
 	if(S_ISLNK(outbuf.st_mode))	cout << "\x1b[36;1m";
-  if(path[0]=='.') cout << "\x1b[40;1m";
-	cout << path;	
+  if(name[0]=='.') cout << "\x1b[40;1m";
+	cout << name;	
 	cout << "\x1b[0m";
 	cout << endl;
 }
 
-void ldprint(bool showhid, char * cdir)
+void ldprint(bool showhid, char* cdir)
 {
-	vector<char*> nl;
-	listmakerpro(nl,cdir);
+	vector<char*> nl,pl;
+	listmakerpro(nl,pl,cdir);
   for(int i=0;i<nl.size();i++)
   {
 		if(nl.at(i)[0]=='.')
 		{
-			if(showhid) lprint(nl.at(i));
+			if(showhid) lprint(nl.at(i),pl.at(i));
 		}
-		else lprint(nl.at(i));
+		else lprint(nl.at(i),pl.at(i));
 	}
 }
 
@@ -218,18 +239,47 @@ int main(int c, char** args)
 	int flag=parser(c,args,pnl);
 	if(pnl.size()==0)
 	{
-		char* cdir=new char[2];
-		strcpy(cdir,".");
-		if(flag&2) ldprint(flag&1,cdir);
-		else ndprint(flag&1,cdir);
+		if(flag&2) ldprint(flag&1,0);
+		else
+		{
+			ndprint(flag&1,0);
+			cout << endl;
+		}
 	}
-	//normal(1);
-	//detailed(0);
-	//char* path=new char[256];
-	//strcpy(path,".");
-	//cout << "ISDIR?? " << is_dir(path);	
-	//ndprint(0,path);
-	//ldprint(0,path);
-	
+	else
+	{
+		for(int i=0;i<pnl.size();i++)
+		{
+			if(is_dir(pnl.at(i)))
+			{
+				if(i!=0) cout << endl << endl;
+				cout << pnl.at(i) << ":" << endl;
+				if(flag&2) ldprint(flag&1,pnl.at(i));
+				else ndprint(flag&1,pnl.at(i));
+			}
+			else
+			{
+				if(flag&2)
+				{
+					if(pnl.at(i)[0]=='.')
+					{
+						if(flag&1);
+						lprint(pnl.at(i),pnl.at(i));
+					}
+					else lprint(pnl.at(i),pnl.at(i));
+				}
+				else
+				{
+					if(pnl.at(i)[0]=='.')
+					{
+						if(flag&1);
+						nprint(pnl.at(i),pnl.at(i));
+					}
+					else nprint(pnl.at(i),pnl.at(i));
+				}
+			}
+		}
+		cout << endl;
+	}
 	return 0;
 }

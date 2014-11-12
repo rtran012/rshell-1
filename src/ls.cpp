@@ -12,7 +12,17 @@
 #include <grp.h>
 #include <pwd.h>
 #include <time.h>
+#include <stdlib.h>
 using namespace std;
+
+bool is_dir(char * path)
+{
+	struct stat outbuf;
+  int x=lstat(path,&outbuf);
+  if(x==-1) perror("Stat");
+	if(S_ISDIR(outbuf.st_mode)) return true;;
+  return false;
+}
 
 void order(vector<char*> &list)
 {
@@ -34,84 +44,9 @@ void order(vector<char*> &list)
 	}
 }
 
-void listmaker(vector<char*> &nl, vector<bool> &exec, vector<bool> &dir)
+void listmakerpro(vector<char*> &nl,char * direc)
 {
-	struct stat outbuf;
-  DIR* currdir=opendir(".");
-  if(currdir==NULL) perror("Opendir");
-  dirent * curdiren=readdir(currdir);
-  if(curdiren ==0 && errno !=0) perror("read"); 
-  while(curdiren!=0)
-  { 
-		nl.push_back(0);	
-		nl.back()=new char[strlen(curdiren->d_name)+1];
-		strcpy(nl.back(),curdiren->d_name);
-    curdiren=readdir(currdir);
-    if(curdiren ==0 && errno !=0) perror("read"); 
-  }
-	order(nl);
-	for(int i=0;i<nl.size();i++)
-	{
-    int x=stat(nl.at(i),&outbuf);
-    if(x==-1) perror("Stat");
-    if((outbuf.st_mode)&S_IFDIR) dir.push_back(true);
-    else dir.push_back(false);
-    if((outbuf.st_mode)&S_IXUSR) exec.push_back(true);
-    else exec.push_back(false);
-	}
-  if(closedir(currdir)==-1) perror("Closedir");
-}
-
-void normal(bool showhid)
-{
-	struct winsize w;
-	int used=0;
-	if(ioctl(0,TIOCGWINSZ,&w)==-1) perror("ioctl");
-	vector<char*> nl;
-	vector<bool> exec,dir;
-	listmaker(nl,exec,dir);
-  for(int i=0;i<nl.size();i++)
-  {
-    if(exec.at(i)) cout << "\x1b[32;1m";
-    if(dir.at(i)) cout << "\x1b[34m";
-    if(nl.at(i)[0]=='.')
-    {
-      if(showhid)
-      {
-        cout << "\x1b[40;1m";
-				if((w.ws_col-used)<strlen(nl.at(i)))
-				{
-					cout << endl << nl.at(i) << "\x1b[0m" << "  ";	
-					used=0;
-				}
-				else
-				{
-					cout << nl.at(i) << "\x1b[0m" << "  ";
-					used+=(strlen(nl.at(i))+2);
-				}
-			}
-    }
-    else
-		{
-			if((w.ws_col-used)<strlen(nl.at(i)))
-			{
-				cout << endl << nl.at(i) << "\x1b[0m" << "  ";	
-				used=0;
-			}
-			else
-			{
-				cout << nl.at(i) << "\x1b[0m" << "  ";
-				used+=(strlen(nl.at(i))+2);
-			}
-		}	
-		cout << "\x1b[0m";
-  }
-	cout << endl;
-}
-
-void minilistmaker(vector<char*> &nl)
-{
-  DIR* currdir=opendir(".");
+  DIR* currdir=opendir(direc);
   if(currdir==NULL) perror("Opendir");
   dirent * curdiren=readdir(currdir);
   if(curdiren ==0 && errno !=0) perror("read"); 
@@ -127,13 +62,47 @@ void minilistmaker(vector<char*> &nl)
 	if(closedir(currdir)==-1) perror("Closedir");
 }
 
-void dprinter(char * path)
+void nprint(char * path)
+{
+	struct stat outbuf;
+	int x=lstat(path,&outbuf);
+	if(x==-1) perror("Stat");
+
+	if((outbuf.st_mode)&S_IXUSR) cout << "\x1b[32;1m";
+	if((outbuf.st_mode)&S_IFDIR) cout << "\x1b[34m";
+	if(S_ISLNK(outbuf.st_mode))	cout << "\x1b[36;1m";
+	if(path[0]=='.') cout << "\x1b[40;1m";
+	cout << path;	
+	cout << "\x1b[0m";
+	cout << "  ";
+}
+
+void ndprint(bool showhid,char * cdir)
+{
+	struct winsize w;
+	int used=0;
+	if(ioctl(0,TIOCGWINSZ,&w)==-1) perror("ioctl");
+	vector<char*> nl;
+	listmakerpro(nl,cdir);
+  for(int i=0;i<nl.size();i++)
+  {
+		if(nl.at(i)[0]=='.' && !showhid) continue;
+		if(((w.ws_col-used)<(strlen(nl.at(i)))) && used!=0)
+		{
+			cout << endl;
+			used=0;
+		}
+		nprint(nl.at(i));
+		used+=(strlen(nl.at(i))+2);
+	}
+	cout << endl;
+}
+void lprint(char * path)
 {
 	struct stat outbuf;
   int x=lstat(path,&outbuf);
   if(x==-1) perror("Stat");
   
-//	cout << "dir: " << S_ISDIR(outbuf.st_mode) << " link: " << S_ISLNK(outbuf.st_mode) << " reg: "<< S_ISREG(outbuf.st_mode) <<  endl;
 	if(S_ISDIR(outbuf.st_mode)) cout << 'd';
   else if(S_ISLNK(outbuf.st_mode)) cout << 'l';
 	else cout << '-';
@@ -176,7 +145,9 @@ void dprinter(char * path)
 	cout << " ";
 	struct tm *at=localtime(&outbuf.st_mtime);
 	cout << at->tm_mon << '/' << at->tm_mday << '/' << at->tm_year+1900;
-	cout << " " << at->tm_hour << ":" << at->tm_min;
+	cout << " " << at->tm_hour << ":";
+	if(at->tm_min<10) cout << '0';
+	cout << at->tm_min;
 
 	cout << " ";
 	if((outbuf.st_mode)&S_IXUSR) cout << "\x1b[32;1m";
@@ -188,22 +159,77 @@ void dprinter(char * path)
 	cout << endl;
 }
 
-void detailed(bool showhid)
+void ldprint(bool showhid, char * cdir)
 {
 	vector<char*> nl;
-	minilistmaker(nl);
+	listmakerpro(nl,cdir);
   for(int i=0;i<nl.size();i++)
   {
 		if(nl.at(i)[0]=='.')
 		{
-			if(showhid) dprinter(nl.at(i));
+			if(showhid) lprint(nl.at(i));
 		}
-		else dprinter(nl.at(i));
+		else lprint(nl.at(i));
 	}
 }
-int main()
+
+int parser(int c,char ** args, vector<char*> &pnl)
 {
+	int flag=0;
+	for(int i=1;i<c;i++)
+	{
+		if(args[i][0]=='-')
+		{
+			for(int j=1;j<strlen(args[i]);j++)
+			{
+				switch(args[i][j])
+				{
+					case 'a':
+						flag=flag|1;
+						break;
+					
+					case 'l':
+						flag=flag|2;
+						break;
+					
+					case 'R':
+						flag=flag|4;
+						break;
+
+					default:
+						cerr << "Invalid flag. Try -a, -l or -R" << endl;
+						exit(1);
+				}
+			}
+		}
+		else
+		{
+			pnl.push_back(0);	
+			pnl.back()=new char[strlen(args[i])+1];
+			strcpy(pnl.back(),args[i]);
+		}
+	}
+	return flag;
+}
+
+int main(int c, char** args)
+{
+	vector<char*> pnl;
+	int flag=parser(c,args,pnl);
+	if(pnl.size()==0)
+	{
+		char* cdir=new char[2];
+		strcpy(cdir,".");
+		if(flag&2) ldprint(flag&1,cdir);
+		else ndprint(flag&1,cdir);
+	}
 	//normal(1);
-	detailed(1);
+	//detailed(0);
+	//char* path=new char[256];
+	//strcpy(path,".");
+	//cout << "ISDIR?? " << is_dir(path);	
+	//ndprint(0,path);
+	//ldprint(0,path);
+	
 	return 0;
 }
